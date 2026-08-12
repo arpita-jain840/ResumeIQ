@@ -1,0 +1,17 @@
+tensorflow
+keras
+pytorch
+huggingface
+langchain
+llm
+generative ai
+rag
+vector database
+xgboost
+lightgbm
+catboost
+spacy
+nltk
+bert
+transformers
+

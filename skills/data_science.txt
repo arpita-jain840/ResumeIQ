@@ -1,0 +1,26 @@
+numpy
+pandas
+matplotlib
+seaborn
+plotly
+scikit-learn
+machine learning
+deep learning
+statistics
+data analysis
+data visualization
+feature engineering
+feature selection
+model evaluation
+regression
+classification
+clustering
+nlp
+computer vision
+opencv
+python
+sql
+git
+github
+power bi
+excel

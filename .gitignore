@@ -1,0 +1,23 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+.env
+
+node_modules/
+frontend/node_modules/
+
+frontend/dist/
+
+uploads/*
+!uploads/.gitkeep
+
+.ipynb_checkpoints/
+.pytest_cache/
+
+.DS_Store
+Thumbs.db
+
+# Dataset
+dataset/

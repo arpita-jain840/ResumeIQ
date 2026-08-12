@@ -1,0 +1,10 @@
+git
+github
+jira
+postman
+power bi
+tableau
+excel
+figma
+vs code
+jupyter notebook

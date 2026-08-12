@@ -1,0 +1,9 @@
+mysql
+postgresql
+sqlite
+mongodb
+firebase
+oracle
+redis
+cassandra
+snowflake
