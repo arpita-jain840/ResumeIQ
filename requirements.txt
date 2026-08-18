@@ -5,3 +5,4 @@ gunicorn
 google-generativeai
 PyMuPDF
 openai
+fpdf2
