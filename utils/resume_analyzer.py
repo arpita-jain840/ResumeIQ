@@ -34,10 +34,7 @@ def analyze_resume(resume_text):
     # -----------------------------
     # Missing Skills
     # -----------------------------
-    missing = find_missing_skills(
-    found_skills,
-    "roles/data_scientist.txt"
-    )
+    missing = find_missing_skills(resume_text)
 
     analysis["Missing Skills"] = missing
 
