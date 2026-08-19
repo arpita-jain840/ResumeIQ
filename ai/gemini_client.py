@@ -22,7 +22,7 @@ if api_key:
 
 model = None
 if api_key:
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 def _extract_response_text(response):
