@@ -64,7 +64,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '',
+  baseURL: 'https://resumeiq-br96.onrender.com',
 });
 
 // ===============================

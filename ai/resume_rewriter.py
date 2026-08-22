@@ -3,6 +3,8 @@ def build_resume_rewriter_prompt(
     analysis
 ):
 
+    analysis = analysis or {}
+
     prompt = f"""
 You are a Senior Technical Recruiter and Professional Resume Writer with over 15 years of experience.
 
@@ -25,19 +27,19 @@ RESUME ANALYSIS
 ==================================================
 
 ATS Score:
-{analysis["ATS Score"]}
+{analysis.get("ATS Score", "Not available")}
 
 Detected Skills:
-{", ".join(analysis["Detected Skills"])}
+{", ".join(analysis.get("Detected Skills", []))}
 
 Missing Skills:
-{", ".join(analysis["Missing Skills"])}
+{", ".join(analysis.get("Missing Skills", []))}
 
 Weak Words:
-{", ".join(analysis["Weak Words"])}
+{", ".join(analysis.get("Weak Words", []))}
 
 Resume Strength:
-{analysis["Resume Strength"]}
+{analysis.get("Resume Strength", "Not available")}
 
 ==================================================
 Instructions
@@ -48,15 +50,17 @@ Improve grammar, readability, ATS compatibility, formatting, and professional to
 
 Return only the final rewritten resume.
 
-Do not include explanations or comparisons.
+Do not include explanations, comparisons, comments, or markdown code fences.
 
 Do not modify sections that are already professional.
 
 Preserve the original formatting as much as possible.
 
-Do not remove any existing information.
+Do not remove any existing information or useful sections.
 
-Do not invent new achievements.
+Do not invent experience, projects, achievements, numbers, certifications, education, skills, or technologies.
+
+Do not add missing skills from the analysis unless they already appear in the original resume.
 
 Only improve wording, grammar, ATS compatibility, and readability.
 
@@ -101,9 +105,7 @@ Automated
 
 14. Return the rewritten resume in proper resume sections.
 
-Generate only the rewritten resume.
-
-Do not explain your changes.
+Generate only the final rewritten resume, beginning directly with the resume content.
 """
 
     return prompt

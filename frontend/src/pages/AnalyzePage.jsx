@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { UploadCloud, X, Sparkles, FileText, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -24,6 +24,19 @@ function AnalyzePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [analysis, setAnalysis] = useState(null);
+
+  useEffect(() => {
+    const savedAnalysis = sessionStorage.getItem('resumeAnalysis');
+    if (savedAnalysis) {
+      try {
+        setAnalysis(JSON.parse(savedAnalysis));
+      } catch (error) {
+        console.error('Stored resume analysis could not be restored:', error);
+        sessionStorage.removeItem('resumeAnalysis');
+      }
+    }
+  }, []);
 
   const validateAndSetFile = (selectedFile) => {
     if (!selectedFile) return;
@@ -48,8 +61,10 @@ function AnalyzePage() {
 
   const handleRemove = () => {
     setFile(null);
+    setAnalysis(null);
     setErrorMessage('');
     setIsDragging(false);
+    sessionStorage.removeItem('resumeAnalysis');
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -63,6 +78,8 @@ function AnalyzePage() {
 
     try {
       const response = await analyzeResume(file);
+      setAnalysis(response.data);
+      sessionStorage.setItem('resumeAnalysis', JSON.stringify(response.data));
       navigate('/dashboard', { state: response.data });
     } catch (error) {
       console.error('Resume analysis failed:', error);
@@ -165,10 +182,24 @@ function AnalyzePage() {
                   </GradientButton>
                 </div>
               ) : (
-                <div className="rounded-[20px] border border-white/10 bg-slate-950/35 p-4">
-                  <p className="text-sm text-slate-300">No file selected yet.</p>
-                  <p className="mt-2 text-xs text-slate-400">Select a PDF to begin your AI analysis flow.</p>
-                </div>
+                analysis ? (
+                  <div className="rounded-[20px] border border-emerald-400/20 bg-emerald-400/10 p-4">
+                    <p className="text-sm font-medium text-emerald-200">Previous analysis restored.</p>
+                    <p className="mt-2 text-xs text-slate-300">ATS Score: {analysis['ATS Score'] ?? '—'}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/dashboard', { state: analysis })}
+                      className="mt-4 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-2 text-sm text-emerald-100"
+                    >
+                      View Analysis
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-[20px] border border-white/10 bg-slate-950/35 p-4">
+                    <p className="text-sm text-slate-300">No file selected yet.</p>
+                    <p className="mt-2 text-xs text-slate-400">Select a PDF to begin your AI analysis flow.</p>
+                  </div>
+                )
               )}
             </motion.div>
           </div>

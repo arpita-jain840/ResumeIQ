@@ -2,7 +2,7 @@ Flask
 flask-cors
 python-dotenv
 gunicorn
-google-generativeai
+google-genai
 PyMuPDF
 openai
 fpdf2

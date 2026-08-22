@@ -44,7 +44,7 @@ def _write_pdf_file(path, content):
     pdf.set_font("Arial", size=11)
 
     for line in content.split("\n"):
-        pdf.multi_cell(0, 6, line)
+        pdf.multi_cell(0, 6, line.encode("latin-1", "replace").decode("latin-1"))
 
     pdf.output(path)
 
@@ -86,14 +86,14 @@ def rewrite():
             analysis = analyze_resume(resume_text)
         except Exception as e:
             print("Analysis error:", e)
-            analysis = {}
+            return jsonify({"error": "Resume analysis failed"}), 500
 
         # ✅ REWRITE (AI)
         try:
             rewritten_resume = rewrite_resume(resume_text, analysis)
         except Exception as e:
             print("AI ERROR:", e)
-            rewritten_resume = ""
+            return jsonify({"error": "Resume rewrite failed"}), 500
 
         # ✅ VALIDATION (IMPORTANT FIX)
         if not rewritten_resume or len(str(rewritten_resume).strip()) < 200:

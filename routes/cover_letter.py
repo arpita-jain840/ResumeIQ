@@ -1,7 +1,4 @@
-from flask import Blueprint
-from flask import request
-from flask import jsonify
-
+from flask import Blueprint, request, jsonify
 import os
 
 from utils.pdf_parser import extract_text_from_pdf
@@ -20,23 +17,17 @@ UPLOAD_FOLDER = "uploads"
 def cover_letter():
 
     if "resume" not in request.files:
-        return jsonify(
-            {
-                "error": "No resume uploaded."
-            }
-        ), 400
+        return jsonify({
+            "error": "No resume uploaded."
+        }), 400
 
     job_description = request.form.get("job_description")
     generation_type = request.form.get("type", "cover")
 
     if not job_description:
-        return jsonify(
-            {
-                "error": "Job Description is required."
-            }
-        ), 400
-        
-    type = request.form.get("type", "cover")
+        return jsonify({
+            "error": "Job Description is required."
+        }), 400
 
     os.makedirs(
         UPLOAD_FOLDER,
@@ -59,14 +50,12 @@ def cover_letter():
     )
 
     letter = generate_cover_letter(
-    resume_text,
-    analysis,
-    job_description,
-    type
+        resume_text,
+        analysis,
+        job_description,
+        generation_type
     )
 
-    return jsonify(
-        {
-            "cover_letter": letter
-        }
-    )
+    return jsonify({
+        "cover_letter": letter
+    })

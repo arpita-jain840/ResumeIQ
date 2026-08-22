@@ -12,7 +12,8 @@ import Navbar from '../components/landing/Navbar';
 
 function DashboardPage() {
   const location = useLocation();
-  const analysis = location.state || null;
+  const storedAnalysis = sessionStorage.getItem('resumeAnalysis');
+  const analysis = location.state || (storedAnalysis ? JSON.parse(storedAnalysis) : null);
 
   const score = Number(analysis?.['ATS Score'] ?? 0);
   const strength = Number(analysis?.['Resume Strength'] ?? 0);
