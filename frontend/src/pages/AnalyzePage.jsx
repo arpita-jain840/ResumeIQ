@@ -27,14 +27,13 @@ function AnalyzePage() {
   const [analysis, setAnalysis] = useState(null);
 
   useEffect(() => {
-    const savedAnalysis = sessionStorage.getItem('resumeAnalysis');
-    if (savedAnalysis) {
-      try {
+    try {
+      const savedAnalysis = sessionStorage.getItem('resumeAnalysis') || localStorage.getItem('resumeAnalysis');
+      if (savedAnalysis) {
         setAnalysis(JSON.parse(savedAnalysis));
-      } catch (error) {
-        console.error('Stored resume analysis could not be restored:', error);
-        sessionStorage.removeItem('resumeAnalysis');
       }
+    } catch (error) {
+      console.error('Stored resume analysis could not be restored:', error);
     }
   }, []);
 

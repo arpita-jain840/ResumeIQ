@@ -1,15 +1,16 @@
+from ai.gemini_client import generate_response
+
+
 def build_resume_rewriter_prompt(
     resume,
-    analysis
+    analysis=None
 ):
-
     analysis = analysis or {}
 
     prompt = f"""
 You are a Senior Technical Recruiter and Professional Resume Writer with over 15 years of experience.
 
 Your task is to rewrite the candidate's resume so that it becomes:
-
 • ATS-friendly
 • Professional
 • Concise
@@ -65,59 +66,30 @@ Do not add missing skills from the analysis unless they already appear in the or
 Only improve wording, grammar, ATS compatibility, and readability.
 
 Follow these rules:
-
 1. Do NOT invent fake experience.
-
 2. Do NOT add fake projects.
-
 3. Preserve all factual information.
-
 4. Improve grammar and sentence structure.
-
 5. Replace weak words with strong action verbs.
-
 6. Make every bullet point ATS-friendly.
-
 7. Keep all achievements and numbers.
-
 8. Improve the Professional Summary.
-
 9. Improve Project descriptions.
-
 10. Improve Skills formatting.
-
 11. Improve Experience descriptions if available.
-
 12. Improve readability.
-
-13. Use professional action verbs like:
-
-Developed
-Designed
-Built
-Implemented
-Optimized
-Created
-Engineered
-Integrated
-Analyzed
-Automated
-
+13. Use professional action verbs like Developed, Designed, Built, Implemented, Optimized, Created, Engineered, Integrated, Analyzed, Automated.
 14. Return the rewritten resume in proper resume sections.
 
 Generate only the final rewritten resume, beginning directly with the resume content.
 """
-
     return prompt
-
-from ai.gemini_client import generate_response
 
 
 def rewrite_resume(
     resume,
-    analysis
+    analysis=None
 ):
-
     prompt = build_resume_rewriter_prompt(
         resume,
         analysis
@@ -127,4 +99,4 @@ def rewrite_resume(
         prompt
     )
 
-    return rewritten_resume
+    return rewritten_resume.strip() if rewritten_resume else ""

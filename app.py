@@ -13,43 +13,56 @@ from routes.cover_letter import cover_letter_bp
 from routes.resume_roast import roast_bp
 
 # ✅ INIT WITH STATIC FOLDER
-app = Flask(__name__, static_folder="static", static_url_path="")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_FOLDER = os.path.join(BASE_DIR, "static")
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(STATIC_FOLDER, exist_ok=True)
+
+app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="")
 
 # ✅ FILE SIZE LIMIT
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
-# ✅ CORS
-CORS(app, resources={r"/*": {"origins": "*"}})
+# ✅ CORS: Enable across all origins, methods, and headers for localhost, LAN, and deployed envs
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "Accept"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+)
 
 # ✅ REGISTER ROUTES
 app.register_blueprint(analyze_bp)
 app.register_blueprint(rewrite_bp)
 app.register_blueprint(cover_letter_bp)
 app.register_blueprint(roast_bp)
-app.register_blueprint(chat_bp)   # 🔥 NEW
+app.register_blueprint(chat_bp)
 
-# ✅ 🔥 MAIN FIX: SERVE REACT BUILD
+# ✅ SERVE REACT BUILD (SPA)
 @app.route("/")
 def serve():
-    return send_from_directory(app.static_folder, "index.html")
+    index_file = os.path.join(app.static_folder, "index.html")
+    if os.path.exists(index_file):
+        return send_from_directory(app.static_folder, "index.html")
+    return "ResumeIQ Backend API is running."
 
-# ✅ OPTIONAL (for React routing)
+# ✅ SPA CATCH-ALL ROUTE (for client-side routing)
 @app.route("/<path:path>")
 def static_proxy(path):
-    return send_from_directory(app.static_folder, path)
+    file_path = os.path.join(app.static_folder, path)
+    if os.path.exists(file_path) and not os.path.isdir(file_path):
+        return send_from_directory(app.static_folder, path)
+    index_file = os.path.join(app.static_folder, "index.html")
+    if os.path.exists(index_file):
+        return send_from_directory(app.static_folder, "index.html")
+    return "Not Found", 404
 
-# ✅ DOWNLOAD ROUTE
-@app.route('/downloads/<path:filename>')
-def download_file(filename):
-    return send_from_directory('downloads', filename, as_attachment=True)
-
-# ✅ DEBUG HEADERS
-@app.after_request
-def after_request(response):
-    print("\n===== RESPONSE HEADERS =====")
-    print(response.headers)
-    print("============================\n")
-    return response
+# ✅ GLOBAL UPLOADS / DOWNLOAD ROUTE
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
 # ✅ RUN
 if __name__ == "__main__":

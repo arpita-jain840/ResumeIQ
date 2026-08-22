@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { AlertTriangle, BrainCircuit, ClipboardList, Gauge, Sparkles, ShieldCheck } from 'lucide-react';
@@ -12,8 +13,41 @@ import Navbar from '../components/landing/Navbar';
 
 function DashboardPage() {
   const location = useLocation();
-  const storedAnalysis = sessionStorage.getItem('resumeAnalysis');
-  const analysis = location.state || (storedAnalysis ? JSON.parse(storedAnalysis) : null);
+
+  const [analysis, setAnalysis] = useState(() => {
+    if (location.state && typeof location.state === 'object') {
+      return location.state;
+    }
+    try {
+      const stored = sessionStorage.getItem('resumeAnalysis') || localStorage.getItem('resumeAnalysis');
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      console.warn('Could not parse stored analysis', e);
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (location.state && typeof location.state === 'object') {
+      setAnalysis(location.state);
+      try {
+        const raw = JSON.stringify(location.state);
+        sessionStorage.setItem('resumeAnalysis', raw);
+        localStorage.setItem('resumeAnalysis', raw);
+      } catch (e) {
+        console.warn('Storage save failed', e);
+      }
+    } else {
+      try {
+        const stored = sessionStorage.getItem('resumeAnalysis') || localStorage.getItem('resumeAnalysis');
+        if (stored) {
+          setAnalysis(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.warn('Stored analysis reload failed', e);
+      }
+    }
+  }, [location.state]);
 
   const score = Number(analysis?.['ATS Score'] ?? 0);
   const strength = Number(analysis?.['Resume Strength'] ?? 0);

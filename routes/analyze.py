@@ -49,11 +49,14 @@ def analyze():
     )
 
     # Analyze resume
-    analysis = analyze_resume(resume_text)
+    try:
+        analysis = analyze_resume(resume_text)
+    except Exception as e:
+        print(f"Analyze error: {e}")
+        return jsonify({"error": "Failed to analyze resume."}), 500
 
     print("=" * 50)
-    print("ANALYSIS RESULT:")
-    print(analysis)
+    print("ANALYSIS COMPLETED SUCCESSFULLY")
     print("=" * 50)
 
     return jsonify(analysis)

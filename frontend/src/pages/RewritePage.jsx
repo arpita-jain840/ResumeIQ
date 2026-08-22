@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Loader2, Maximize2, RotateCcw, UploadCloud, X } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -10,7 +10,7 @@ import EmptyState from '../components/common/EmptyState';
 import CopyButton from '../components/common/CopyButton';
 import DownloadButton from '../components/common/DownloadButton';
 import AnimatedCard from '../components/common/AnimatedCard';
-import { rewriteResume } from '../services/api';
+import { rewriteResume, getApiBaseUrl } from '../services/api';
 
 const formatFileSize = (bytes) => {
   if (!bytes) return '0 KB';
@@ -32,12 +32,37 @@ function RewritePage() {
   const inputRef = useRef(null);
   const resumeRef = useRef(null);
   const [file, setFile] = useState(null);
-  const [rewrittenResume, setRewrittenResume] = useState('');
-  const [pdfUrl, setPdfUrl] = useState('');
+  const [rewrittenResume, setRewrittenResume] = useState(() => {
+    try {
+      return sessionStorage.getItem('rewrittenResume') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [pdfUrl, setPdfUrl] = useState(() => {
+    try {
+      return sessionStorage.getItem('rewrittenResumePdfUrl') || '';
+    } catch {
+      return '';
+    }
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (rewrittenResume) {
+        sessionStorage.setItem('rewrittenResume', rewrittenResume);
+      }
+      if (pdfUrl) {
+        sessionStorage.setItem('rewrittenResumePdfUrl', pdfUrl);
+      }
+    } catch (e) {
+      console.warn('Session save failed', e);
+    }
+  }, [rewrittenResume, pdfUrl]);
 
   const validateAndSetFile = (selectedFile) => {
     if (!selectedFile) return;
@@ -58,7 +83,12 @@ function RewritePage() {
   const handleRemove = () => {
     setFile(null);
     setRewrittenResume('');
+    setPdfUrl('');
     setIsDragging(false);
+    try {
+      sessionStorage.removeItem('rewrittenResume');
+      sessionStorage.removeItem('rewrittenResumePdfUrl');
+    } catch (e) {}
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -76,21 +106,85 @@ function RewritePage() {
 
     try {
       const response = await rewriteResume(file);
-      setRewrittenResume(response.data.rewritten_resume || '');
-      setPdfUrl(response.data.pdf_url || '');
+      const generated = response.data.rewritten_resume || '';
+      const downloadLink = response.data.pdf_url || '';
+      setRewrittenResume(generated);
+      setPdfUrl(downloadLink);
       toast.success('Resume rewrite generated successfully.');
     } catch (error) {
       console.error('Resume rewrite failed:', error);
-      setPdfUrl('');
       toast.error(error?.response?.data?.error || 'Resume rewrite failed. Please try again.');
     } finally {
       clearInterval(interval);
       setIsLoading(false);
     }
   };
-  const downloadPDF = () => {
-    if (!pdfUrl) return;
-    window.open(pdfUrl, '_blank');
+
+  const downloadPDF = async () => {
+    if (!rewrittenResume && !pdfUrl) {
+      toast.error('No rewritten resume available to download.');
+      return;
+    }
+
+    // 1. Try server PDF download with fetch & blob
+    if (pdfUrl) {
+      try {
+        const fullUrl = pdfUrl.startsWith('http')
+          ? pdfUrl
+          : `${getApiBaseUrl()}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
+
+        const res = await fetch(fullUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = 'rewritten_resume.pdf';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+          toast.success('PDF download started.');
+          return;
+        }
+      } catch (err) {
+        console.warn('Server PDF download failed, falling back to client generation:', err);
+      }
+    }
+
+    // 2. Client-side PDF fallback with jsPDF
+    if (rewrittenResume) {
+      try {
+        const { jsPDF } = await import('jspdf');
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+
+        const lines = doc.splitTextToSize(rewrittenResume, 180);
+        let cursorY = 20;
+        const pageHeight = 280;
+
+        for (let i = 0; i < lines.length; i++) {
+          if (cursorY > pageHeight) {
+            doc.addPage();
+            cursorY = 20;
+          }
+          doc.text(lines[i], 15, cursorY);
+          cursorY += 5.5;
+        }
+
+        doc.save('rewritten_resume.pdf');
+        toast.success('PDF downloaded successfully.');
+      } catch (err) {
+        console.error('jsPDF generation failed:', err);
+        toast.error('Failed to download PDF.');
+      }
+    }
   };
   return (
     <>
